@@ -37,11 +37,9 @@ export default function UserRoutes(app) {
     res.json(user);
   };
 
-  const findUsersForCourse = (req, res) => {
+  const findUsersForCourse = async (req, res) => {
     const { courseId } = req.params;
-    const enrollments = db.enrollments.filter((e) => e.course === courseId);
-    const userIds = enrollments.map((e) => e.user);
-    const users = dao.findAllUsers().filter((u) => userIds.includes(u._id));
+    const users = await enrollmentsDao.findUsersForCourse(courseId);
     res.json(users);
   };
 
@@ -49,7 +47,7 @@ export default function UserRoutes(app) {
     const userId = req.params.userId;
     const userUpdates = req.body;
     await dao.updateUser(userId, userUpdates);
-    req.session["currentUser"];
+    const currentUser = req.session["currentUser"];
     if (currentUser && currentUser._id === userId) {
       req.session["currentUser"] = { ...currentUser, ...userUpdates };
     }
