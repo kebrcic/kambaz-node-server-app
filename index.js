@@ -12,6 +12,7 @@ import session from "express-session";
 import ModulesRoutes from "./(kambaz)/modules/routes.js";
 import AssignmentsRoutes from "./(kambaz)/assignments/routes.js";
 import EnrollmentsRoutes from "./(kambaz)/enrollments/routes.js";
+import PazzaRoutes from "./(kambaz)/pazza/routes.js";
 
 const CONNECTION_STRING = process.env.DATABASE_CONNECTION_STRING || "mongodb://localhost:27017/kambaz";
 mongoose.connect(CONNECTION_STRING)
@@ -45,6 +46,7 @@ CourseRoutes(app, db);
 ModulesRoutes(app, db);
 AssignmentsRoutes(app, db);
 EnrollmentsRoutes(app, db);
+PazzaRoutes(app);
 
 //LAB
 Hello(app);
