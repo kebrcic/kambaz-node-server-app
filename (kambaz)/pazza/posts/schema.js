@@ -5,7 +5,7 @@ const pazzaPostSchema = new mongoose.Schema(
     course: { type: String, ref: "CourseModel" },
     type: { type: String, enum: ["Question", "Note"], required: true },
     summary: { type: String, required: true, maxlength: 100 },
-    details: String,
+    details: { type: String, required: true },
     postTo: {
       type: String,
       enum: ["Entire Class", "Individual"],

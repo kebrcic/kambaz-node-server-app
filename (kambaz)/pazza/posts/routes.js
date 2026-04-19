@@ -31,7 +31,7 @@ export default function PazzaPostRoutes(app) {
       );
     }
 
-    // Attach read status
+    // Attach read status and view count
     const postIds = posts.map((p) => p._id);
     const readStatuses = await readStatusDao.findReadPostsForUser(
       currentUser._id,
@@ -39,9 +39,13 @@ export default function PazzaPostRoutes(app) {
     );
     const readPostIds = new Set(readStatuses.map((r) => r.post));
 
+    const viewCounts = await readStatusDao.countViewersForPosts(postIds);
+    const viewCountMap = new Map(viewCounts.map((v) => [v._id, v.count]));
+
     const postsWithStatus = posts.map((p) => ({
       ...p.toObject(),
       isRead: readPostIds.has(p._id),
+      viewCount: viewCountMap.get(p._id) || 0,
     }));
 
     res.json(postsWithStatus);
@@ -68,13 +72,18 @@ export default function PazzaPostRoutes(app) {
     // Mark as read
     await readStatusDao.markAsRead(currentUser._id, postId);
 
-    res.json(post);
+    const viewCount = await readStatusDao.countViewersForPost(postId);
+    res.json({ ...post.toObject(), viewCount });
   };
 
   const createPost = async (req, res) => {
     const currentUser = req.session["currentUser"];
     if (!currentUser) return res.sendStatus(401);
     const { cid } = req.params;
+
+    if (!req.body.folders || !Array.isArray(req.body.folders) || req.body.folders.length === 0) {
+      return res.status(400).json({ message: "At least one folder is required" });
+    }
 
     const post = {
       ...req.body,
@@ -83,8 +92,15 @@ export default function PazzaPostRoutes(app) {
       authorName: `${currentUser.firstName} ${currentUser.lastName}`,
       authorRole: currentUser.role,
     };
-    const newPost = await postsDao.createPost(post);
-    res.json(newPost);
+    try {
+      const newPost = await postsDao.createPost(post);
+      res.json(newPost);
+    } catch (err) {
+      if (err.name === "ValidationError") {
+        return res.status(400).json({ message: err.message });
+      }
+      throw err;
+    }
   };
 
   const updatePost = async (req, res) => {

@@ -26,10 +26,23 @@ export default function PazzaReadStatusDao() {
     return model.deleteMany({ post: postId });
   }
 
+  function countViewersForPost(postId) {
+    return model.countDocuments({ post: postId });
+  }
+
+  function countViewersForPosts(postIds) {
+    return model.aggregate([
+      { $match: { post: { $in: postIds } } },
+      { $group: { _id: "$post", count: { $sum: 1 } } },
+    ]);
+  }
+
   return {
     markAsRead,
     findReadPostsForUser,
     countUnreadForUser,
     deleteReadStatusForPost,
+    countViewersForPost,
+    countViewersForPosts,
   };
 }
